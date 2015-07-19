@@ -342,9 +342,9 @@ class Twpath : public TwBucket<knode> {
     DLOG( INFO ) << "Entering twpath::e__adjustDumpsToMaxCapacity";
 #endif
     knode dumpSite = dumpS;
-    int i = currentPos;
+    POS i = currentPos;
 
-    while ( i < path.size() ) {
+    while (i < path.size() ) {
       if ( path[i].isDump() ) erase(i);
       else i++;
     }
@@ -359,7 +359,7 @@ class Twpath : public TwBucket<knode> {
     //add dumps because of CV
     while ( cvTot() != 0 )  {
       //cycle until we find the first non CV
-      for ( i = path.size() - 1; i >= currentPos - 1 and path[i].cvTot(); i-- ) {}
+      for ( i = path.size() - 1; (int) i >= currentPos - 1 and path[i].cvTot(); i-- ) {}
 
       insert(dumpSite, i + 1); // the dump should be after pos i
 
@@ -388,8 +388,8 @@ class Twpath : public TwBucket<knode> {
     DLOG( INFO ) << "Entering twpath::e_adjustDumpsToNoCV";
 #endif
     knode dumpSite = dumpS;
-    int startFrom = currentPos;
-    int i;
+    POS startFrom = currentPos;
+    UINT i;
 
     //make sure everything is evaluated
     evaluate(currentPos, maxcapacity); 

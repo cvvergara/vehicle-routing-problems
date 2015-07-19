@@ -414,7 +414,8 @@ Solution::Solution( const std::string &infile,
          solid.push_back(id);
          soltype.push_back( (Twnode::NodeType)type);
   }
-  int nid, vid;
+  int nid;
+  int vid(-1);
   Vehicle truck;
   Bucket unassigned = pickups;
   Bucket assigned;
@@ -475,6 +476,9 @@ Solution::Solution( const std::string &infile,
                 assigned = assigned + stops;
                 unassigned = unassigned - stops;
             };
+            break;
+       default: 
+            assert(true==false);
             break;
       }  // switch
       ++i;

@@ -40,9 +40,11 @@ OsrmClient::OsrmClient(const OsrmClient &other) {
   connectionAvailable = other.connectionAvailable;
 };
 
+#if 0
 OsrmClient &OsrmClient::operator=(const OsrmClient &other) {
   connectionAvailable = other.connectionAvailable;
 };
+#endif
 
 /*!  * \brief The OsrmClient constructor.  */
 OsrmClient::OsrmClient() {
@@ -138,8 +140,8 @@ void OsrmClient::addViaPoint( double lat, double lon )
 #ifdef DOSTATS
   Timer timer;
 #endif
-  FixedPointCoordinate p( lat * COORDINATE_PRECISION,
-                          lon * COORDINATE_PRECISION );
+  FixedPointCoordinate p( lat * (double) COORDINATE_PRECISION,
+                          lon * (double) COORDINATE_PRECISION );
   route_parameters.coordinates.push_back( p );
 #ifdef DOSTATS
   STATS->addto( "OsrmClient::addViaPoint Cumulative time", timer.duration() );
@@ -746,8 +748,8 @@ bool OsrmClient::testOsrmClient(
 #endif
 
   std::deque<std::string> hints;
-  double penalty;
-  bool oldPenalty = addPenalty;
+  // double penalty;
+  // bool oldPenalty = addPenalty;
   double time;
   std::string hint1;
   std::string hint2;
@@ -850,7 +852,7 @@ bool OsrmClient::testOsrmClient(
   if (getOsrmTimes(times)) {
 #ifdef DOVRPLOG
       DLOG(INFO) << "#8 Times:" << std::endl;
-      for (int i=0; i<times.size(); i++)
+      for (UINT i=0; i<times.size(); i++)
           DLOG(INFO) << "i: " << i << ", time: " << times[i] << std::endl;
 #endif
   }
@@ -865,8 +867,8 @@ bool OsrmClient::testOsrmClient(
   if (getOsrmHints(hints)) {
 #ifdef DOVRPLOG
       DLOG(INFO) << "#9 Hints:" << std::endl;
-      for (int i=0; i<hints.size(); i++)
-          DLOG(INFO) << "i: " << i << ", hint: " << hints[i] << std::endl;
+      for (const auto &hint : hints) 
+          DLOG(INFO) << " hint: " << hint << std::endl;
 #endif
   }
   else {
@@ -880,8 +882,8 @@ bool OsrmClient::testOsrmClient(
   if ( getOsrmStreetNames( names ) ) {
 #ifdef DOVRPLOG
       DLOG(INFO) << "#10 StreetNames:" << std::endl;
-      for (int i=0; i<names.size(); i++)
-          DLOG(INFO) << "i: " << i << ", name: " << names[i] << std::endl;
+      for (const auto &name : names) 
+          DLOG(INFO) << " name: " << name << std::endl;
 #endif
   }
   else {
@@ -896,8 +898,8 @@ bool OsrmClient::testOsrmClient(
   if ( osrmi->getOsrmNamesOnRoute( names ) ) {
 #ifdef DOVRPLOG
     DLOG(INFO) << "#11 NamesOnRoute:" << std::endl;
-    for (int i=0; i<names.size(); i++)
-        DLOG(INFO) << "i: " << i << ", name: " << names[i] << std::endl;
+      for (const auto &name : names) 
+          DLOG(INFO) << " name: " << name << std::endl;
 #endif
   } else {
 #ifdef DOVRPLOG

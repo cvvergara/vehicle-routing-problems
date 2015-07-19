@@ -16,7 +16,7 @@
 #include "fleetOpt.h"
 
 
-void TruckManyVisitsDump::initializeTrip(Trip &trip, bool fromStart) {
+void TruckManyVisitsDump::initializeTrip(Trip &trip) {
   invariant();
   trip.evaluate();
 #ifdef VRPMINTRACE
@@ -171,10 +171,10 @@ bool TruckManyVisitsDump::insertBestPairSubPath(std::deque<Trip> &trips) {
   DLOG(INFO) << "TruckManyVisitsDump::insertBestPairSubPath";
 #endif
   invariant();
-  float8 bestAvgNodeTime = 999999;
-  float8 currAvgNodeTime = 999999;
+  // double bestAvgNodeTime = VRP_MAX();
+  // double currAvgNodeTime = VRP_MAX();
   int lessFilledTrip = 0;
-  float8 worseProportion = 1;
+  double worseProportion = 1;
 
   for( UINT i = 0; i< trips.size(); ++i) {
     if (i == 0 || worseProportion > trips[i].size()/trips[i].estimatedZ()) {
@@ -406,12 +406,12 @@ void TruckManyVisitsDump::initializeTruck(Vehicle &truck, std::deque<Trip> &trip
     trip = truck.get_new_trip();
     trip.setInitialValues(truck.avgC(), pickups);
     if (i == 0) {
-      initializeTrip(trip, true);
+      initializeTrip(trip);
     } else {
       trip.clear();
       trips[i-1].getDumpSite().dump();
       trip.set_startingSite(trips[i-1].getDumpSite()); 
-      initializeTrip(trip, false);
+      initializeTrip(trip);
     }
     
     if ( i < truck.estimatedN() - 1 ) {
@@ -534,7 +534,7 @@ void TruckManyVisitsDump::add_extra_trip(Vehicle &truck) {
   // DLOG(INFO) << "CHECK WITH";
   // truck.dumpeval();
   trip.setInitialValues(truck.avgC(), pickups);
-  initializeTrip(trip, false);
+  initializeTrip(trip);
   // trip.dumpeval();
   // trip.dumpCostValues();
   
@@ -634,9 +634,9 @@ void TruckManyVisitsDump::insertNodesOnPath(Trip &trip) {
   Bucket aux;
   Trashnode bestNode;
   float8 bestTime;
-  UINT bestPos;
+  POS bestPos;
     // insert the containers that are in the path
-  int lastBestPos = 0;
+  POS lastBestPos = 0;
   while (streetNodes.size() > 0) {
         invariant();
         aux.clear();
@@ -692,6 +692,7 @@ void TruckManyVisitsDump::process(int pcase)
   fleet = opt_fleet.get_opt_fleet();
   DLOG(INFO) << "OPTIMIZED\n";
   tau();
-  //assert(true==false);
+  osrmi->useOsrm(oldState);
+   
   invariant();
 }

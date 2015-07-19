@@ -80,7 +80,7 @@ void remove_CV(V &trip);
   void deleteNodesOfTrip(Trip &trip, int cant);
   void remove_CV(Trip &trip);
   void remove_TWV(Trip &trip);
-  void initializeTrip(Trip &trip, bool fromStart);
+  void initializeTrip(Trip &trip);
   void fillTrip(Trip &trip);
   void add_extra_trip(Vehicle &truck);
   void buildTruck(Vehicle &truck, std::deque<Trip> &trips);

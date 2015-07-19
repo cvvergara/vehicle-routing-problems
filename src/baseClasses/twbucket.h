@@ -979,7 +979,7 @@ class TwBucket {
    */
   bool erase(const knode &node) {
     if ( !hasNid(node) ) return false;
-    int atPos = pos(node.nid());
+    POS atPos = pos(node.nid());
     assert(atPos < path.size());
     path.erase(path.begin() + atPos);
     return true;

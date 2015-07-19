@@ -351,7 +351,7 @@ std::deque<int> BaseVehicle::getpath() const
 }
 
 bool BaseVehicle::e_adjustDumpsToNoCV(int currentPos) {
-  path.e_adjustDumpsToNoCV(currentPos, dumpSite, maxcapacity);
+  return path.e_adjustDumpsToNoCV(currentPos, dumpSite, maxcapacity);
 }
 
 

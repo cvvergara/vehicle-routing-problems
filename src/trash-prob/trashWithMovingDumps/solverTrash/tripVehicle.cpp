@@ -45,13 +45,14 @@ assert(true==false);
   intraTripOptimizationNoOsrm();
   tauTrips();
   // assert(true==false);
-
+#if 0
   POS  del_pos, ins_pos;
   POS  o_del_pos, o_ins_pos;
   UINT  trip, o_trip;
   double delta1, delta2;
   trip = 2; 
   o_trip = 1;
+#endif
   auto count = 0;
   auto tot_count = 0;
   
@@ -152,7 +153,7 @@ int Vehicle::exchangesWithNotOnPath(Trip &trip, Trip &o_trip) {
   POS  o_d_pos, o_i_pos;
   double d_delta, i_delta;
   double o_d_delta, o_i_delta;
-  bool inPath1, inPath2;
+  // bool inPath1, inPath2;
   UINT d_node, o_d_node;
   auto count = 0;
   
@@ -219,7 +220,7 @@ int Vehicle::exchangesWithOnPath(Trip &trip, Trip &o_trip) {
   POS  o_d_pos, o_i_pos;
   double d_delta, i_delta;
   double o_d_delta, o_i_delta;
-  bool inPath1, inPath2;
+  // bool inPath1, inPath2;
   UINT d_node, o_d_node;
   auto count(0);
   
@@ -280,7 +281,7 @@ int Vehicle::exchangesWithOnPath(Trip &trip, Trip &o_trip) {
 
 
 
-int Vehicle::exchangesWorse(int lim_iter) {
+UINT Vehicle::exchangesWorse(UINT lim_iter) {
   auto count = 0;
   for (auto &trip : trips) {
      for (auto &o_trip: trips) {
@@ -292,7 +293,7 @@ int Vehicle::exchangesWorse(int lim_iter) {
   return count;
 }
 
-int Vehicle::exchangesWorse(Trip &trip, Trip &o_trip, int lim_iter) {
+UINT Vehicle::exchangesWorse(Trip &trip, Trip &o_trip, UINT lim_iter) {
   for (UINT i = 0; i< lim_iter; ++i) {
     if (!exchangesWorse(trip, o_trip)) return i;
   }
@@ -305,7 +306,7 @@ bool Vehicle::exchangesWorse(Trip &trip, Trip &o_trip) {
   POS  o_del_pos, o_ins_pos;
   double delta_del, delta_ins;
   double o_delta_del, o_delta_ins;
-  bool inPath1, inPath2;
+  // bool inPath1, inPath2;
 
   trip.getRemovalValues(o_trip, o_ins_pos, del_pos, delta_del, o_delta_ins);
   o_trip.getRemovalValues(trip, ins_pos, o_del_pos, o_delta_del, delta_ins);
@@ -360,8 +361,8 @@ void Trip::exchange(Trip &other,
   // other.tau("other after insert");
   
   //calculate the delete position
-  del_pos = del_pos < ins_pos? del_pos: ++del_pos;
-  o_del_pos = o_del_pos < o_ins_pos? o_del_pos: ++o_del_pos;
+  del_pos = del_pos < ins_pos? del_pos: del_pos + 1;
+  o_del_pos = o_del_pos < o_ins_pos? o_del_pos: o_del_pos + 1;
   path.erase(del_pos);
   other.path.erase(o_del_pos);
   // tau("this after remove");
@@ -375,8 +376,8 @@ void Trip::exchange(Trip &other,
 bool Trip::getRemovalValues(const Trip &other, POS &o_ins_pos, POS &del_pos, double &o_delta_ins, double &delta_del) const{
   if (path.size() <=1) return false;
   UINT del_node;
-  UINT ins_after;
-  bool insertInPath;
+  // UINT ins_after;
+  // bool insertInPath;
   bestRemoval(del_node, del_pos, delta_del);
   return other.bestInsertion(del_node, o_ins_pos, o_delta_ins);
 };
@@ -476,7 +477,7 @@ bool Trip::chooseMyBest(const Trip &other, POS o_ins_pos, POS del_pos, POS &ins_
   // nodesOnPath.dumpid("nodes in my path");
   removeRestricted(nodesOnPath, del_pos);
   auto found = false;
-  UINT o_del_node, ins_after;
+  UINT o_del_node; // , ins_after;
 
 
   double time0, time1, deltaTime;
@@ -484,7 +485,7 @@ bool Trip::chooseMyBest(const Trip &other, POS o_ins_pos, POS del_pos, POS &ins_
     o_del_node = nodesOnPath[0].nid();
     o_del_pos = other.path.pos(o_del_node);
     o_delta_del = 999999;
-    for(auto j = 0; j < nodesOnPath.size(); ++j) {
+    for(UINT j = 0; j < nodesOnPath.size(); ++j) {
       UINT node = nodesOnPath[j].nid(); // working with node
       POS pos_o = other.path.pos(node); // located at this postition in the others path
       if (o_del_pos == other.path.size()-1) { // its the last node
@@ -511,6 +512,7 @@ bool Trip::chooseMyBest(const Trip &other, POS o_ins_pos, POS del_pos, POS &ins_
     }
     assert(true==false);
   }
+  return false;
 }
 
 double Trip::delta_del(POS del_pos) const {
@@ -581,7 +583,8 @@ bool Trip::bestInsertion(UINT n_ins, POS &ins_pos, double &i_delta) const {
 
   i_delta = 999999;
 
-  double time0, time1, deltaTime;
+  // double time0, time1,
+  double deltaTime;
   for (POS i = 1; i < path.size(); ++i) {
     deltaTime = delta_ins(n_ins, i);
     // DLOG(INFO) << i << "delta" << deltaTime;

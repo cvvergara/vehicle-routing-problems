@@ -243,8 +243,8 @@ assert(true==false);
     double d;
 
 
-    for ( int i = 0; i < unassigned.size(); i++ ) {
-      for ( int j = 0; j < truck.size() - 1; j++ ) {
+    for (UINT i = 0; i < unassigned.size(); i++ ) {
+      for (UINT j = 0; j < truck.size() - 1; j++ ) {
         if ( isCompatibleIAJ(truck[j], unassigned[i], truck[j + 1]) ) {
           d = truck.segmentDistanceToPoint(j , unassigned[i]);
 
@@ -272,8 +272,8 @@ assert(true==false);
     double d;
 
 
-    for ( int i = 0; i < unassigned.size(); i++ ) {
-      for ( int j = 0; j < truck.size() - 1; j++ ) {
+    for (UINT i = 0; i < unassigned.size(); i++ ) {
+      for (UINT j = 0; j < truck.size() - 1; j++ ) {
         if (!(j == 0)
              && ((travel_Time[truck[j].nid()][unassigned[i].nid()] == -1)
                   || (travel_Time[unassigned[i].nid()][truck[j + 1].nid()] == -1)))
@@ -300,7 +300,6 @@ assert(true==false);
   }
 
 
-// TODO
 bool  findBestToNodeHasMoreNodesOnPath(
     const TwBucket<knode> &assigned, const TwBucket<knode> &unassigned,
     UINT From, UINT &bestTo, TwBucket<knode> &subPath) const {
@@ -308,7 +307,7 @@ bool  findBestToNodeHasMoreNodesOnPath(
   assert(From < original.size());
   subPath.clear();
   bestTo = unassigned[0].nid();
-  UINT actual = 0;
+  int actual = 0;
   int max = -1;
 
   for (UINT i =0; i< unassigned.size() - 1; ++i) {
@@ -333,6 +332,7 @@ bool  findBestToNodeHasMoreNodesOnPath(
 
   subPath = actualNodesOnTrip(From, bestTo, assigned);
   subPath.push_back(original[bestTo]);
+  return true;
 }
 
 float8 getTimeOverNodesCount(
@@ -360,14 +360,14 @@ float8 getTimeOnTrip(const knode from, const knode middle, const knode to) {
        + travel_time_onTrip[middle.nid()][to.nid()];
 }
 
-bool  findBestFromNodeHasMoreNodesOnPath(
+bool findBestFromNodeHasMoreNodesOnPath(
     const TwBucket<knode> &assigned, const TwBucket<knode> &unassigned,
     UINT &bestFrom, UINT To, TwBucket<knode> &subPath) const {
   assert(unassigned.size() != 0);
   assert(To < original.size());
   subPath.clear();
   bestFrom = unassigned[0].nid();
-  UINT actual = 0;
+  int actual = 0;
   int max = -1;
 
   for (UINT i =0; i< unassigned.size() - 1; ++i) {
@@ -381,7 +381,6 @@ bool  findBestFromNodeHasMoreNodesOnPath(
         bestFrom = from;
         assert(bestFrom < original.size());
       }
-    
   }
     // build the whole subpath, nodes on trip need to be in unassigned set
 #ifdef VRPMAXTRACE
@@ -392,6 +391,7 @@ bool  findBestFromNodeHasMoreNodesOnPath(
 
   subPath = actualNodesOnTrip(bestFrom, To, assigned);
   subPath.push_front(original[bestFrom]);
+  return true;
 }
 
 
@@ -402,7 +402,7 @@ bool  findPairNodesHasMoreNodesOnPath(
   subPath.clear();
   bestFrom = unassigned[0].nid();
   bestTo = unassigned[1].nid();
-  UINT actual = 0;
+  int actual = 0;
   int max = 0;
 
   for (UINT i =0; i< unassigned.size() - 1; ++i) {
@@ -433,12 +433,13 @@ bool  findPairNodesHasMoreNodesOnPath(
 
   subPath.push_back(original[bestFrom]);
   for (unsigned int i = 0; i < nodes_onTrip[bestFrom][bestTo].size(); ++i) {
-    int nid = nodes_onTrip[bestFrom][bestTo][i];
+    UINT nid = nodes_onTrip[bestFrom][bestTo][i];
     assert(nid < original.size());
     if (assigned.hasNid(nid)) continue;
     subPath.push_back(original[nid]);
   }
   subPath.push_back(original[bestTo]);
+  return true;
 }
 
 
@@ -458,7 +459,7 @@ bool  findNodeHasMoreNodesOnPath(const TwBucket<knode> &trip,
   bestPos = 1;
   UINT bestPrevNode = l_trip[0].nid();
   UINT bestNextNode = l_trip[1].nid();
-  UINT actual = 0;
+  int actual = 0;
   int max = -1;
 
 
@@ -494,14 +495,14 @@ bool  findNodeHasMoreNodesOnPath(const TwBucket<knode> &trip,
 #endif
 
   for (unsigned int i = 0; i < nodes_onTrip[bestPrevNode][bestNode].size(); ++i) {
-    int nid = nodes_onTrip[bestPrevNode][bestNode][i];
+    auto nid = nodes_onTrip[bestPrevNode][bestNode][i];
     assert(nid < original.size());
     if (assigned.hasNid(nid)) continue;
     subPath.push_back(original[nid]);
   }
   subPath.push_back(original[bestNode]);
   for (unsigned int i = 0; i < nodes_onTrip[bestNode][bestNextNode].size(); ++i) {
-    int nid = nodes_onTrip[bestNode][bestNextNode][i];
+    UINT nid = nodes_onTrip[bestNode][bestNextNode][i];
     if (assigned.hasNid(nid)) continue;
     assert(nid < original.size());
     subPath.push_back(original[nid]);
@@ -529,7 +530,6 @@ int actualCantNodesOnTrip(UINT from, UINT to, const TwBucket<knode> &assigned) c
   assert(to < original.size());
   TwBucket<knode> subPath;
   TwBucket<knode> m_assigned = assigned;
-  int count = 0;
   for (unsigned int i = 0; i < nodes_onTrip[from][to].size(); ++i) {
     UINT nid = nodes_onTrip[from][to][i];
     if (assigned.hasNid(nid)) continue;
@@ -545,7 +545,6 @@ TwBucket<knode> actualNodesOnTrip(UINT from, UINT to, const TwBucket<knode> &ass
   assert(to < original.size());
   TwBucket<knode> subPath;
   TwBucket<knode> m_assigned = assigned;
-  int count = 0;
   for (unsigned int i = 0; i < nodes_onTrip[from][to].size(); ++i) {
     UINT nid = nodes_onTrip[from][to][i];
     if (assigned.hasNid(nid)) continue;
@@ -1175,6 +1174,7 @@ bool setTravelingTimesOfRoute(
 #endif
   osrmi->useOsrm(oldStateOsrm);  
 #endif  // with OSRMCLIENT
+    return true;
 }
 
 
@@ -1324,6 +1324,7 @@ bool setTravelingTimesInsertingOneNode(
 
   osrmi->useOsrm(oldStateOsrm);  
 #endif  // with OSRMCLIENT
+  return true;
 }
 
 
@@ -1354,8 +1355,8 @@ bool setTravelingTimesInsertingOneNode(
     double deltaTime;
     int bestIndex;
     
-    for ( int j = 0; j < truck.size(); j++ ) {
-      for ( int i = 0; i < unassigned.size(); i++ ) {
+    for (UINT j = 0; j < truck.size(); j++ ) {
+      for (UINT i = 0; i < unassigned.size(); i++ ) {
         if (j == 0)setTravelingTimesInsertingOneNode(truck, dumpSite, unassigned[i]);
 
         // special case 
@@ -2588,7 +2589,7 @@ private:
     int j = to.nid();
     int count = from.size();
 
-    for ( int i = 0; i < from.size(); i++ ) {
+    for (UINT i = 0; i < from.size(); i++ ) {
       if (TravelTime(from[i].nid(), j) < 0) {
         DLOG(INFO) << "found a negative";
         travel_Time[from[i].nid()][j] = 0.00001;

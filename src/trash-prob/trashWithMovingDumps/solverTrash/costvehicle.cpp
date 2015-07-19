@@ -70,7 +70,7 @@ void CostVehicle::setInitialValues( const Trashnode &node,
   //double serviceE = endingSite.serviceTime();
   //shiftLength = endTime - startTime;
   //e_makeFeasable( 0 );
-  double Z = estimatedZ();
+  // double Z = estimatedZ();
   totalTime = 0;
   double fixedTime = depot.serviceTime() // begining of trip
                    + ttDE + serviceE();  // ending of trip 
