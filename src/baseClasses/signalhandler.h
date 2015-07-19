@@ -97,6 +97,7 @@ public:
   // Hook method.
   virtual int handleSignal (int signum) {
     if (signum == SIGINT) this->graceful_quit_ = 1;
+    return 1;
   }
 
   // Accessor.
@@ -115,6 +116,7 @@ public:
   // Hook method.
   virtual int handleSignal (int signum) {
     if (signum == SIGQUIT) this->abortive_quit_ = 1;
+    return 1;
   }
 
   // Accessor.

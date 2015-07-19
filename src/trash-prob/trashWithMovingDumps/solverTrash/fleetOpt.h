@@ -24,7 +24,7 @@ class Fleetopt: public Vehicle {
   public:
   // default constructor & destructor
   std::deque<Vehicle> get_opt_fleet();
-  void optimize(int iter);
+  void optimize(UINT iter);
   void insert(const std::deque < Vehicle> &p_fleet);
   void reconstruct_fleet();
 
@@ -34,7 +34,7 @@ class Fleetopt: public Vehicle {
 
 class Optimizer: public Solution {
   public:
-    void optimizefleet(int iter);
+    void optimizefleet(UINT iter);
     Optimizer(const Solution &solution, int iter): Solution(solution) {
         optimizefleet(iter);
     }

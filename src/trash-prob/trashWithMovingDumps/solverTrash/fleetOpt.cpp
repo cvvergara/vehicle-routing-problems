@@ -13,7 +13,7 @@
  ********************************************************************VRP*/
 #include "fleetOpt.h"
 
-void Optimizer::optimizefleet(int iter) {
+void Optimizer::optimizefleet(UINT iter) {
     Fleetopt opt_fleet;
     opt_fleet.insert(fleet);
     opt_fleet.optimize(iter);
@@ -36,7 +36,7 @@ void Fleetopt::extract_trips() {
   }
 }
 
-void Fleetopt::optimize(int iter) {
+void Fleetopt::optimize(UINT iter) {
   extract_trips();
   tauTrips("fleet::AFTER extract");
 

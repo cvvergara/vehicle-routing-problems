@@ -623,15 +623,20 @@ class TwBucket {
   bool hasId(const knode &node) const {
      return hasid(node.id());
   }
+
   /*! \brief \param[in] id Uses the \b id */
-  bool hasId(UID id) const {
+  bool hasId(int id) const {
+    #if 1
+    for (const auto &node : path)
+        if (node.id() == id) return true;
+    #else
     const_reverse_iterator rit = path.rbegin();
 
     for (const_iterator it = path.begin(); it != path.end() ; it++, ++rit) {
       if ( it->id() == id ) return true;
       if ( rit->id() == id ) return true;
     }
-
+    #endif
     return false;
   }
   ///@}
@@ -811,15 +816,18 @@ class TwBucket {
    * \return The internal node id or -1 if user id was not found.
    * \todo TODO  put it in twc
    */
-  UID getNidFromId(UID id) const {
+  UID getNidFromId(int id) const {
+#if 1
+    for (const auto &node : path) 
+        if (node.id() == id) return node.nid();
+#else
     const_reverse_iterator rit = path.rbegin();
-
     for (const_iterator it = path.begin(); it != path.end() ; it++, ++rit) {
       if ( it->id() == id ) return it->nid();
 
       if ( rit->id() == id ) return rit->nid();
     }
-
+#endif
     return 0;
   }
 
@@ -829,7 +837,7 @@ class TwBucket {
    * \param[in] id The user id for the node.
    * \return The position in the path or -1 if it is not found.
    */
-  POS posFromId(UID id) const {
+  POS posFromId(int id) const {
     for ( const_iterator it = path.begin(); it != path.end() ; it++ ) {
       if ( it->id() == id ) return POS(it - path.begin());
     }
@@ -1012,8 +1020,8 @@ class TwBucket {
     path.push_front(node);
     return true;
   }
-  iterator begin() { path.begin(); }
-  iterator end() { path.begin(); }
+  iterator begin() { return path.begin(); }
+  iterator end() { return path.begin(); }
   void pop_back() { path.pop_back(); }
   void pop_front() { path.pop_front(); }
   /*! \brief disables resizing to a larger bucket */

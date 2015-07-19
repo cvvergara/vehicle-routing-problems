@@ -162,9 +162,9 @@ class CompareSecond {
   }
 
 
-  bool emptiedTruck;
   int z1Tot;
   int z2Tot;
+  bool emptiedTruck;
 
   void initializeTravelTime() {
     for (UINT i = 0; i < travel_Time.size(); ++i) 
@@ -585,7 +585,6 @@ void fill_travel_time_onTrip() {
 
 void fill_travel_time_onTrip_work(
   std::set<id_time, CompareSecond< id_time > >  &process_order) {
-  int i,j;
   TwBucket <knode> trip;
   TwBucket <knode> nodesOnPath;
 #ifdef VRPMINTRACE
@@ -595,7 +594,6 @@ void fill_travel_time_onTrip_work(
     while (process_order.size() > 0) {
       UINT   i = process_order.begin()->first.first;
       UINT   j = process_order.begin()->first.second;
-      double p_tim = process_order.begin()->second;
 #ifdef VRPMINTRACE
       if ((process_order.size() % 200) == 0)
         DLOG(INFO) << "fill_travel_time_onTrip " << i << " size " << process_order.size() << " working with " <<original[i].id() << "," << original[j].id()
@@ -651,9 +649,9 @@ void process_pair_onPath(UINT i, UINT j) const{
 
 
 // the values for non containers to/from containers should be filled
-bool compulsory_fill() {
+void compulsory_fill() {
   DLOG(INFO) << "started compulsory fill";
-  for (int i = original.size()-1; !original[i].isPickup(); --i) {
+  for (UINT i = original.size()-1; !original[i].isPickup(); --i) {
     for (UINT j = 0; j < i; ++j) {
 #if 0
     DLOG(INFO) << "working with " << original[i].id() << ", " << original[j].id() 
@@ -711,8 +709,8 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
 
 
   // fills the 2D table
-  for (int i = 0; i < nodesOnPath.size()-1; ++i) {
-    for (int j = i + 1; j < nodesOnPath.size(); ++j) {
+  for (UINT i = 0; i < nodesOnPath.size()-1; ++i) {
+    for (UINT j = i + 1; j < nodesOnPath.size(); ++j) {
 
       THROW_ON_SIGINT
 
@@ -727,7 +725,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
           travel_Time[from][to] = times[j]-times[i];
 
           nodes_onTrip[from][to].clear();
-          for (int k = i + 1; k < j; ++k) {
+          for (UINT k = i + 1; k < j; ++k) {
             UINT nodeOnPath = nodesOnPath[k].nid();
             assert (nodeOnPath < original.size());
             if (nodesOnPath[k].isPickup()) nodes_onTrip[from][to].push_back(nodeOnPath);
@@ -751,7 +749,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
             travel_Time[from][to] = times[j]-times[i];
 
             nodes_onTrip[from][to].clear();
-            for (int k = i + 1; k < j; ++k) {
+            for (UINT k = i + 1; k < j; ++k) {
               UINT nodeOnPath = nodesOnPath[k].nid();
               assert (nodeOnPath < original.size());
               if (nodesOnPath[k].isPickup()) nodes_onTrip[from][to].push_back(nodeOnPath);
@@ -977,7 +975,6 @@ void getNodesOnPath(
     // loop through the nodes and see which are on this segment
     for ( unsigned int i=0; i<streetNodes.size(); i++ ) {
       double pos = streetNodes[i].positionAlongSegment( *(git-1), *git, tol );
-      double distToDump = streetNodes[i].distanceToSquared( dumpSite );
       if ( pos > 0 ) {
         // found one on the segment so save it so we can order them
         std::pair< double, unsigned int > p( pos, i );
@@ -1680,7 +1677,6 @@ bool setTravelingTimesInsertingOneNode(
 private:
   double getTravelTime(UID from, UID to) const {
     assert(from < original.size() && to < original.size());
-    double time;
     if (travel_Time[from][to] == -1) {
 #ifdef DOSTATS
     STATS->inc("TWC::extra process_pair_onPath");
@@ -2622,7 +2618,7 @@ private:
     int j = from.nid();
     int count = to.size();
 
-    for (int i = 0; i < to.size(); i++) {
+    for (UINT i = 0; i < to.size(); i++) {
       if (TravelTime(j, to[i].nid()) < 0) {
         DLOG(INFO) << "found a negative";
         travel_Time[j][to[i].nid()] = 1;
@@ -2700,10 +2696,17 @@ private:
     Timer timer;
 #endif
 
+#if 1
+    for (auto  &node :  nodes) {
+        node.set_hint(original[node.nid()].hint());
+        node.set_streetId(original[node.nid()].streetId());
+    }
+#else
     for ( int i = 0; i < nodes.size(); i++ ) {
       nodes[i].set_hint(original[nodes[i].nid()].hint());
       nodes[i].set_streetId(original[nodes[i].nid()].streetId());
     }
+#endif
 
 #ifdef DOSTATS
     STATS->addto("TWC::setHints Cumultaive time:", timer.duration());
@@ -2869,7 +2872,7 @@ private:
 
     original.clear();
     original = datanodes;
-    POS siz = original.size();
+    // POS siz = original.size();
 
     std::ifstream in(infile.c_str());
     std::string line;
@@ -3066,11 +3069,11 @@ private:
     assert(original.size() == travel_Time.size());
     twcij.resize(original.size());
 
-    for (int i = 0; i < original.size(); i++)
+    for (UINT i = 0; i < original.size(); i++)
       twcij[i].resize(original.size());
 
-    for ( int i = 0; i < original.size(); i++ ) {
-      for ( int j = i; j < original.size(); j++ ) {
+    for ( UINT i = 0; i < original.size(); i++ ) {
+      for ( UINT j = i; j < original.size(); j++ ) {
         twcij[i][j] = twc_for_ij(original[i], original[j]);
         twcij[j][i] = twc_for_ij(original[j], original[i]);
       }
@@ -3082,10 +3085,14 @@ private:
   */
   bool check_integrity() const {
     assert(original.size() == twcij.size());
-
+#if 1
+    for (auto const &e : twcij) 
+        assert(e.size() == original.size());
+#else
     for ( int i = 0; i < original.size(); i++ ) {
       assert(twcij[i].size() == original.size());
     }
+#endif
     return true;
   }
 
