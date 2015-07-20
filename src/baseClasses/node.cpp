@@ -23,6 +23,8 @@
 #endif
 
 #include "./node.h"
+// for distance_to_segment
+#include <boost/geometry/strategies/cartesian/distance_projected_point.hpp>
 
 
 
@@ -36,21 +38,8 @@
 
 
 double Node::haversineDistance(const Node &other) const {
-#if 1 // testing boost geometry
-  // double const average_earth_radius = 6372795.0;
+  // TODO (cvvc) not completly sure this is the correct call for harversine, but I am leaving it for later
   return boost::geometry::distance(this->coordinates_, other.coordinates_);
-#else
-  const double pi = 3.14159265358979323846;
-  const double deg2rad = pi / 180.0;
-  const double radius = 6367000;  // Earth radius 6367 Km in meters
-  double dlon = (other.x_ - x_) * deg2rad;
-  double dlat = (other.y_ - y_) * deg2rad;
-  double a = pow(sin(dlat / 2.0), 2) + cos(y_) * cos(other.y_) *
-             pow(sin(dlon / 2.0), 2);
-  double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
-  double dist = radius * c;
-  return dist;
-#endif
 }
 
 double Node::distance(const Node &other) const {
@@ -58,51 +47,16 @@ double Node::distance(const Node &other) const {
   return haversineDistance(other);
 }
 
-#if 0
-/*!  * \brief Set attributes for this node.  */
-void Node::set(UID id, double x, double y) {
-  id_ = nid_ = id;
-  x_ = x;
-  y_ = y;
-  valid_ = true;
-}
-
-void Node::clear() {
-  nid_ = 0; id_ = 0;
-  x_ = 0.0; y_ = 0.0;
-  hint_ = "";
-  valid_ = false;
-}
-
-/*! \brief Set attributes by parsing a string.  */
-void Node::set(const std::string &line) {
-  clear();
-  std::istringstream buffer(line);
-  long int ids;
-  buffer >> ids;
-  buffer >> x_;
-  buffer >> y_;
-  hint_ = "";
-  if (ids < 0) {
-    valid_ = false;
-  } else {
-    nid_ = UID(ids);
-    id_ = UID(ids);
-  }
-  coordinates_.set<0>(x_);
-  coordinates_.set<1>(y_);
-}
-#endif
 
 
 
 /*!  * \brief Print the contents of this node.  */
 void Node::dump() const {
 #ifdef DOVRPLOG
-  DLOG(INFO) << nid_
-             << ", " << x_
-             << ", " << y_
-             << ", " << hint_;
+  DLOG(INFO) << nid()
+             << ", " << x()
+             << ", " << y()
+             << ", " << hint();
 #endif
 }
 
@@ -134,37 +88,7 @@ Node  Node::operator-(const Node &other) const {
     return boost::geometry::dot_product(this->coordinates_, other.coordinates_);
   }
 
-#if 0
-/*! \brief Compute the Euclidean length of a vector */
-double Node::length() const { return sqrt( x_ * x_ + y_ * y_ ); }
-#endif
 
-#if 0
-/*! \brief Compute the gradient or slope of a vector defined by the vector n->p
- * \bug This is not safe as it can generate a divide by zero
- * \todo This needs to be fixed to avoid divide by zero errors
- */
-double Node::gradient(const Node &p) const {
-  double deltaY = p.y_ - y_;
-  double deltaX = p.x_ - x_;
-
-  if (deltaX == 0) {
-    if (deltaY >= 0)
-      return VRP_MAX();
-    else
-      return VRP_MIN();
-  } else {
-    return  deltaY / deltaX;
-  }
-}
-
-/*! \brief Compute the Euclidean distance between to Nodes.
- * \sa Node::length, Node::distance, Node::distanceToSquared
- */
-double Node::distanceTo(const Node &p) const {
-  return sqrt(distanceToSquared(p));
-}
-#endif
 
 /*!  \brief Compute the Euclidean distance squared between two Nodes.
  *
@@ -174,23 +98,17 @@ double Node::distanceToSquared(const Node &other) const {
   return boost::geometry::comparable_distance(this->coordinates_, other.coordinates_);
 }
 
-#if 0
-/*!  \brief Calculates the unit vector of the reference Node.  */
-Node Node::unit() const {
-  double scale = 0.0;
-  double len = length();
-
-  if ( len != 0.0 )
-    scale = 1.0 / len;
-
-  return (*this) * scale;
-}
-#endif
-
 /*! \brief Compute the shortest distance from a Node to a line segment*/
 double Node::distanceToSegment(const Node &v, const Node &w) const {
+#if 0  // TODO: Not working yet
+  typedef boost::geometry::strategy::distance::projected_point< double, haversine<double> > strategy_type;
+  strategy_type strategy;
+  strategy_type::calculation_type d2 = strategy.apply(this->coordinates_, v.coordinates_, w.coordinates_);
+  return d2;
+  return boost::geometry::distance(this->coordinates_, v.coordinates_, w.coordinates_);
+#endif 
   Node q;
-  return distanceToSegment( v, w, q );
+  return distanceToSegment(v, w, q);
 }
 
 /*! \brief Compute the shortest distance from a Node to a line segment */
@@ -275,23 +193,6 @@ double Node::positionAlongSegment(const Node &v, const Node &w, double tol) cons
 }
 
 #if 0
-/*! \brief Compute the shortest distance
-    * Compute the shortest distance and x,y position on the segment of the
-    * closest point.
-*/
-double Node::distanceToSegment(double segmentX1, double segmentY1,
-                               double segmentX2, double segmentY2,
-                               double &qX, double &qY) const {
-  Node q;
-
-  double distance = distanceToSegment(Node(segmentX1, segmentY1),
-                                      Node(segmentX2, segmentY2), q);
-
-  qX = q.x_;
-  qY = q.y_;
-
-  return distance;
-}
 #endif
 
 // Constructors
@@ -305,33 +206,7 @@ Node::Node()
 
 /*! \brief Construct a new Node and assign it \c x and \c y values.  */
 Node::Node(double x, double y)
-  : nid_(0), id_(0), x_(x), y_(y), hint_(""), valid_(false), coordinates_(x, y){
-//  coordinates_.set<0>(x_);
-//  coordinates_.set<1>(y_);
+  : nid_(0), id_(0),
+    hint_(""), valid_(false), coordinates_(x, y){
 }
 
-/*! \brief Construct a new Node and assign it the associated values.  */
-Node::Node(UID nid, UID id , double x, double y)
-  : nid_(nid), id_(id), x_(x), y_(y), hint_(""), valid_(true),  coordinates_(x, y) {
-//  coordinates_.set<0>(x_);
-//  coordinates_.set<1>(y_);
-}
-
-/*! \brief Create a new Node by parsing a string.  */
-Node::Node(const std::string &line)
-     : nid_(0), id_(0), x_(0.0), y_(0.0), hint_(""), valid_(true) {
-  std::istringstream buffer(line);
-  long int ids;
-  buffer >> ids;
-  buffer >> x_;
-  buffer >> y_;
-  hint_ = "";
-  if (ids < 0) {
-    valid_ = false;
-  } else {
-    nid_ = UID(ids);
-    id_ = UID(ids);
-  }
-  coordinates_.set<0>(x_);
-  coordinates_.set<1>(y_);
-}
