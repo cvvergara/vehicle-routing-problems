@@ -21,6 +21,11 @@
 #include <math.h>
 #include <stdio.h>
 
+//#include <boost/log/utility/init/to_file.hpp>
+//#include <boost/log/utility/init/to_console.hpp>
+// #include <boost/log/trivial.hpp>
+// #define BOOST_LOG_DYN_LINK 1
+
 #ifdef DOVRPLOG
 #include "logger.h"
 #endif
@@ -63,6 +68,7 @@ void Usage()
 
 int main(int argc, char **argv)
 {
+//  boost::log::init_log_to_console();
 
 #ifdef DOVRPLOG
   if ( not google::IsGoogleLoggingInitialized() ) {

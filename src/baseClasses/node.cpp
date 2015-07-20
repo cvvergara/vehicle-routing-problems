@@ -17,11 +17,13 @@
 #include <iostream>
 #include <sstream>
 
+
 #ifdef DOVRPLOG
 #include "./logger.h"
 #endif
 
 #include "./node.h"
+
 
 
 /*!
@@ -31,7 +33,13 @@
  * the nodes x,y is loaded with longitude,latitude values.
  *
  */
+
+
 double Node::haversineDistance(const Node &other) const {
+#if 1 // testing boost geometry
+  // double const average_earth_radius = 6372795.0;
+  return boost::geometry::distance(this->coordinates_, other.coordinates_);
+#else
   const double pi = 3.14159265358979323846;
   const double deg2rad = pi / 180.0;
   const double radius = 6367000;  // Earth radius 6367 Km in meters
@@ -42,14 +50,15 @@ double Node::haversineDistance(const Node &other) const {
   double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
   double dist = radius * c;
   return dist;
+#endif
 }
 
 double Node::distance(const Node &other) const {
-  if (!(isLatLon() && other.isLatLon())) return distanceTo(other);
-
+  assert(isLatLon() && other.isLatLon());
   return haversineDistance(other);
 }
 
+#if 0
 /*!  * \brief Set attributes for this node.  */
 void Node::set(UID id, double x, double y) {
   id_ = nid_ = id;
@@ -64,6 +73,7 @@ void Node::clear() {
   hint_ = "";
   valid_ = false;
 }
+
 /*! \brief Set attributes by parsing a string.  */
 void Node::set(const std::string &line) {
   clear();
@@ -79,41 +89,57 @@ void Node::set(const std::string &line) {
     nid_ = UID(ids);
     id_ = UID(ids);
   }
+  coordinates_.set<0>(x_);
+  coordinates_.set<1>(y_);
 }
+#endif
 
 
 
 /*!  * \brief Print the contents of this node.  */
-#ifdef DOVRPLOG
 void Node::dump() const {
+#ifdef DOVRPLOG
   DLOG(INFO) << nid_
              << ", " << x_
              << ", " << y_
              << ", " << hint_;
-}
 #endif
+}
 
 // Vector Operations
 
 /*! \brief Create a new Node by performing vector addition.  */
-Node  Node::operator+(const Node &v) const {
-  return Node( x_ + v.x_, y_ + v.y_ );
+Node Node::operator+(const Node &other) const {
+     Node node(*this);
+     boost::geometry::add_point(node.coordinates_, other.coordinates_);
+     return node;
 }
 
 /*! \brief Create a new Node by performing vector subtraction.  */
-Node  Node::operator-(const Node &v) const {
-  return Node( x_ - v.x_, y_ - v.y_ );
+Node  Node::operator-(const Node &other) const {
+     Node node(*this);
+     boost::geometry::subtract_point(node.coordinates_, other.coordinates_);
+     return node;
 }
 
 /*! \brief Create a new Node by scaling and existing node by a factor \c f.*/
-Node  Node::operator*(double f) const { return Node( x_ * f, y_ * f ); }
+  Node Node::operator*(double val) const {
+     Node node(*this);
+     boost::geometry::multiply_value(node.coordinates_, val);
+     return node;
+  }
 
 /*! \brief Compute the vector dot product between two Nodes.*/
-double Node::dotProduct( const Node &p ) const { return x_ * p.x_ + y_ * p.y_; }
+  double Node::dotProduct( const Node &other ) const {
+    return boost::geometry::dot_product(this->coordinates_, other.coordinates_);
+  }
 
+#if 0
 /*! \brief Compute the Euclidean length of a vector */
 double Node::length() const { return sqrt( x_ * x_ + y_ * y_ ); }
+#endif
 
+#if 0
 /*! \brief Compute the gradient or slope of a vector defined by the vector n->p
  * \bug This is not safe as it can generate a divide by zero
  * \todo This needs to be fixed to avoid divide by zero errors
@@ -138,18 +164,17 @@ double Node::gradient(const Node &p) const {
 double Node::distanceTo(const Node &p) const {
   return sqrt(distanceToSquared(p));
 }
+#endif
 
 /*!  \brief Compute the Euclidean distance squared between two Nodes.
  *
  * \sa Node::length, Node::distanceTo, Node::distance
  */
-double Node::distanceToSquared(const Node &p) const {
-  const double dX = p.x_ - x_;
-  const double dY = p.y_ - y_;
-
-  return dX * dX + dY * dY;
+double Node::distanceToSquared(const Node &other) const {
+  return boost::geometry::comparable_distance(this->coordinates_, other.coordinates_);
 }
 
+#if 0
 /*!  \brief Calculates the unit vector of the reference Node.  */
 Node Node::unit() const {
   double scale = 0.0;
@@ -160,6 +185,7 @@ Node Node::unit() const {
 
   return (*this) * scale;
 }
+#endif
 
 /*! \brief Compute the shortest distance from a Node to a line segment*/
 double Node::distanceToSegment(const Node &v, const Node &w) const {
@@ -174,7 +200,7 @@ double Node::distanceToSegment(const Node &v, const Node &w, Node &q) const {
 
   if (distSq == 0.0) {  // v == w case
     q = v;
-    return distanceTo(v);
+    return distance(v);
   }
 
   // consider the line extending the segment, parameterized as v + t (w - v)
@@ -185,12 +211,12 @@ double Node::distanceToSegment(const Node &v, const Node &w, Node &q) const {
 
   if ( t < 0.0 ) {  // beyond the v end of the segment
     q = v;
-    return distanceTo(v);
+    return distance(v);
   }
 
   if ( t > 1.0 ) {  // beyond the w end of the segment
     q = w;
-    return distanceTo(w);
+    return distance(w);
   }
 
   // projection falls on the segment
@@ -198,9 +224,8 @@ double Node::distanceToSegment(const Node &v, const Node &w, Node &q) const {
 
   q = projection;
 
-  return distanceTo(projection);
+  return distance(projection);
 }
-
 
 /*! \bref Compute position along the line segment
  *  Check if the node is on the line segment and return -1.0 if distance
@@ -249,6 +274,7 @@ double Node::positionAlongSegment(const Node &v, const Node &w, double tol) cons
   return t;
 }
 
+#if 0
 /*! \brief Compute the shortest distance
     * Compute the shortest distance and x,y position on the segment of the
     * closest point.
@@ -266,23 +292,29 @@ double Node::distanceToSegment(double segmentX1, double segmentY1,
 
   return distance;
 }
-
+#endif
 
 // Constructors
 
 /*! \brief Construct a new Node that needs the user to set its attributes.  */
+#if 0
 Node::Node()
   : nid_(0), id_(0), x_(0.0), y_(0.0), hint_(""), valid_(false) {
 }
+#endif
 
 /*! \brief Construct a new Node and assign it \c x and \c y values.  */
 Node::Node(double x, double y)
-  : nid_(0), id_(0), x_(x), y_(y), hint_(""), valid_(false) {
+  : nid_(0), id_(0), x_(x), y_(y), hint_(""), valid_(false), coordinates_(x, y){
+//  coordinates_.set<0>(x_);
+//  coordinates_.set<1>(y_);
 }
 
 /*! \brief Construct a new Node and assign it the associated values.  */
 Node::Node(UID nid, UID id , double x, double y)
-  : nid_(nid), id_(id), x_(x), y_(y), hint_(""), valid_(true) {
+  : nid_(nid), id_(id), x_(x), y_(y), hint_(""), valid_(true),  coordinates_(x, y) {
+//  coordinates_.set<0>(x_);
+//  coordinates_.set<1>(y_);
 }
 
 /*! \brief Create a new Node by parsing a string.  */
@@ -300,4 +332,6 @@ Node::Node(const std::string &line)
     nid_ = UID(ids);
     id_ = UID(ids);
   }
+  coordinates_.set<0>(x_);
+  coordinates_.set<1>(y_);
 }

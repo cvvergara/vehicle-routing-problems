@@ -17,6 +17,14 @@
 #include <basictypes.h>
 #include <string>
 
+#include <boost/geometry/geometry.hpp>
+// #include <boost/geometry/geometries/linestring.hpp>
+// #include <boost/geometry/io/wkt/read.hpp>
+
+// #include <boost/geometry/io/svg/svg_mapper.hpp>
+
+
+
 /*! \class Node
  * \brief The Node class defines a point in 2D space with an id.
  *
@@ -28,37 +36,42 @@
  */
 
 class Node {
+  typedef boost::geometry::model::point
+    <
+        double, 2, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>
+    > spherical_point;
  public:
   /** @name accessors */
   ///@{
-  UID nid() const {return nid_;}
-  int id() const {return id_;}
-  double x() const {return x_;}
-  double y() const {return y_;}
-  std::string hint() const {return hint_;}
+  inline UID nid() const {return nid_;}
+  inline int id() const {return id_;}
+  inline double x() const {return x_;}
+  inline double y() const {return y_;}
+  inline spherical_point coordinates() const{ return coordinates_;}
+  inline std::string hint() const {return hint_;}
   ///@}
 
 
 
   /** @name state */
   ///@{
-  bool isLatLon() const {
+  inline bool isLatLon() const {
     return (x_ < 180) && (x_ > -180)
            && (y_ < 180) && (y_ > -180);
   }
-  bool isValid() const { return  valid_ > 0;}
-  bool isSamePos(const Node &other) const { return distance(other) == 0; }
-  bool isSamePos(const Node &other, double tolerance) const {
+  inline bool isValid() const { return  valid_ > 0;}
+  inline bool isSamePos(const Node &other) const { return distance(other) == 0; }
+  inline bool isSamePos(const Node &other, double tolerance) const {
     return distance(other) < tolerance;
   }
-  bool hasHint() const {return !( hint_ == "" );}
+  inline bool hasHint() const {return !( hint_ == "" );}
   ///@}
 
   /** @name mutators */
   ///@{
-  void clear();
-  void set(const std::string &line);
-  void set(UID nid, double x, double y);
+  // void clear();
+  // void set(const std::string &line);
+  // void set(UID nid, double x, double y);
   void set_nid(UID nid) {nid_ = nid;}
   void set_id(int id) {
     id_ = id;
@@ -86,26 +99,29 @@ class Node {
   Node operator-(const Node &v) const;
   Node operator*(double f) const;
   double dotProduct(const Node &p) const;
-  double length() const;
-  double gradient(const Node &pi) const;
-  Node unit() const;
+  // double length() const;
+  // double gradient(const Node &pi) const;
+  // Node unit() const;
   ///@}
 
   /** @name distances */
   ///@{
   double distance(const Node &n) const;
   double haversineDistance(const Node &n) const;
-  double distanceTo(const Node &p) const;
+  // double distanceTo(const Node &p) const;
   double distanceToSquared(const Node &p) const;
   ///@}
 
   /** @name distanceToSegment */
-  /* Shortest distnace from pooit to a segment (v,w) */
+  /* Shortest distnace from point to a segment (v,w) */
   ///@{
   double distanceToSegment(const Node &v, const Node &w) const;
   double distanceToSegment(const Node &v, const Node &w, Node &q) const;
+#if 0
   double distanceToSegment(double, double, double, double, double &,
                            double &) const;
+#endif
+
   ///@}
 
   double positionAlongSegment(const Node &v, const Node &w, double tol) const;
@@ -114,7 +130,9 @@ class Node {
   void dump() const;
 
   // constructors
-  Node();
+  Node() = default;
+  Node(const Node&) = default;
+  // Node(Node&&) = default;
   Node(double x, double y);
   Node(UID nid, UID id, double x, double y);
   explicit Node(const std::string &line);
@@ -127,6 +145,7 @@ class Node {
   double y_;   ///< y or latitude of the node's location
   std::string hint_;  ///< orsrm's hint
   bool valid_;  ///< true when id_ has being assigned
+  spherical_point coordinates_; // for earth 
 };
 
 #endif  // SRC_BASECLASSES_NODE_H_
